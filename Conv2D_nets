@@ -1,0 +1,412 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled0.ipynb",
+      "version": "0.3.2",
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/joeforan76/colab_notebooks/blob/master/Conv2D_nets\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "metadata": {
+        "id": "LcanIeZoAcPX",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "#%%capture\n",
+        "#!pip install pydot\n",
+        "#!apt-get install graphviz\n",
+        "#!sed -i 's/def _check_pydot()/def _check__pydot()/g' /usr/local/lib/python3.6/dist-packages/keras/utils/vis_utils.py\n",
+        "#!sed -i 's/_check_pydot()/#_check_pydot()/g' /usr/local/lib/python3.6/dist-packages/keras/utils/vis_utils.py"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "1-oF1tYf4j8M",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        },
+        "outputId": "81eb0956-f177-4470-fceb-a5fd0b838c8c"
+      },
+      "cell_type": "code",
+      "source": [
+        "import keras\n",
+        "from keras.layers import Input, Dense, Conv2D, BatchNormalization, Flatten, ReLU, MaxPool2D\n",
+        "from keras.models import Model\n",
+        "from keras import backend as K\n",
+        "\n",
+        "from IPython.display import SVG\n",
+        "from keras.utils.vis_utils import model_to_dot"
+      ],
+      "execution_count": 1,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Using TensorFlow backend.\n"
+          ],
+          "name": "stderr"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "NiD4UGwn4ly7",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "def toy_model(input_shape, n_classes):\n",
+        "  input = Input(input_shape)\n",
+        "  x = Conv2D(64, 11, strides=5, padding='same', activation='relu')(input)\n",
+        "  x = Flatten()(x)\n",
+        "  output = Dense(n_classes, activation='softmax')(x)\n",
+        "  model = Model(input, output)\n",
+        "  return model"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "k-RJHcMN6QD4",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 278
+        },
+        "outputId": "d8789680-c449-4142-85e0-e91e7bb3f25a"
+      },
+      "cell_type": "code",
+      "source": [
+        "input_shape = 224, 224, 3\n",
+        "n_classes = 1000\n",
+        "\n",
+        "K.clear_session()\n",
+        "model = toy_model(input_shape, n_classes)\n",
+        "model.summary()"
+      ],
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "_________________________________________________________________\n",
+            "Layer (type)                 Output Shape              Param #   \n",
+            "=================================================================\n",
+            "input_1 (InputLayer)         (None, 224, 224, 3)       0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_1 (Conv2D)            (None, 45, 45, 64)        23296     \n",
+            "_________________________________________________________________\n",
+            "flatten_1 (Flatten)          (None, 129600)            0         \n",
+            "_________________________________________________________________\n",
+            "dense_1 (Dense)              (None, 1000)              129601000 \n",
+            "=================================================================\n",
+            "Total params: 129,624,296\n",
+            "Trainable params: 129,624,296\n",
+            "Non-trainable params: 0\n",
+            "_________________________________________________________________\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "MVRFgoiZ6RNj",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "def alexnet(input_shape, n_classes):\n",
+        "  input = Input(input_shape)\n",
+        "  x = Conv2D(96, 11, strides=4, activation='relu', padding = 'same')(input)\n",
+        "  x = BatchNormalization()(x)\n",
+        "  x = MaxPool2D(3, strides=2)(x)\n",
+        "  \n",
+        "  x = Conv2D(256, 5, activation='relu', padding='same')(x)\n",
+        "  \n",
+        "  x = BatchNormalization()(x)\n",
+        "\n",
+        "  x = MaxPool2D(3, strides=2)(x)\n",
+        "\n",
+        " \n",
+        "  x = Conv2D(384, 3, activation='relu', padding='same')(x) \n",
+        "  x = Conv2D(384, 3, activation='relu', padding='same')(x)\n",
+        "  x = Conv2D(256, 3, activation='relu', padding='same')(x)\n",
+        "  x = BatchNormalization()(x)\n",
+        "  x = MaxPool2D(3, strides=2)(x)\n",
+        " \n",
+        "  x = Flatten()(x)\n",
+        "  x = Dense(4096, activation='relu')(x)\n",
+        "  x = Dense(4096, activation='relu')(x)\n",
+        "  output = Dense(n_classes, activation='relu')(x)\n",
+        "  return Model(input, output)\n"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "0LxFexTb_WPC",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 694
+        },
+        "outputId": "2b6e457b-1c8e-4e28-8cfb-442971b73dc2"
+      },
+      "cell_type": "code",
+      "source": [
+        "input_shape = 224, 224, 3\n",
+        "n_classes = 1000\n",
+        "\n",
+        "K.clear_session()\n",
+        "model = alexnet(input_shape, n_classes)\n",
+        "model.summary()"
+      ],
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "_________________________________________________________________\n",
+            "Layer (type)                 Output Shape              Param #   \n",
+            "=================================================================\n",
+            "input_1 (InputLayer)         (None, 224, 224, 3)       0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_1 (Conv2D)            (None, 56, 56, 96)        34944     \n",
+            "_________________________________________________________________\n",
+            "batch_normalization_1 (Batch (None, 56, 56, 96)        384       \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_1 (MaxPooling2 (None, 27, 27, 96)        0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_2 (Conv2D)            (None, 27, 27, 256)       614656    \n",
+            "_________________________________________________________________\n",
+            "batch_normalization_2 (Batch (None, 27, 27, 256)       1024      \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_2 (MaxPooling2 (None, 13, 13, 256)       0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_3 (Conv2D)            (None, 13, 13, 384)       885120    \n",
+            "_________________________________________________________________\n",
+            "conv2d_4 (Conv2D)            (None, 13, 13, 384)       1327488   \n",
+            "_________________________________________________________________\n",
+            "conv2d_5 (Conv2D)            (None, 13, 13, 256)       884992    \n",
+            "_________________________________________________________________\n",
+            "batch_normalization_3 (Batch (None, 13, 13, 256)       1024      \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_3 (MaxPooling2 (None, 6, 6, 256)         0         \n",
+            "_________________________________________________________________\n",
+            "flatten_1 (Flatten)          (None, 9216)              0         \n",
+            "_________________________________________________________________\n",
+            "dense_1 (Dense)              (None, 4096)              37752832  \n",
+            "_________________________________________________________________\n",
+            "dense_2 (Dense)              (None, 4096)              16781312  \n",
+            "_________________________________________________________________\n",
+            "dense_3 (Dense)              (None, 1000)              4097000   \n",
+            "=================================================================\n",
+            "Total params: 62,380,776\n",
+            "Trainable params: 62,379,560\n",
+            "Non-trainable params: 1,216\n",
+            "_________________________________________________________________\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "3zUgEfKw_Sm6",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1541
+        },
+        "outputId": "54e9041f-c041-4124-ee45-3f11a5356b65"
+      },
+      "cell_type": "code",
+      "source": [
+        "SVG(model_to_dot(model).create(prog='dot', format='svg'))"
+      ],
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.SVG object>"
+            ],
+            "image/svg+xml": "<svg height=\"1140pt\" viewBox=\"0.00 0.00 279.00 1140.00\" width=\"279pt\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n<g class=\"graph\" id=\"graph0\" transform=\"scale(1 1) rotate(0) translate(4 1136)\">\n<title>G</title>\n<polygon fill=\"#ffffff\" points=\"-4,4 -4,-1136 275,-1136 275,4 -4,4\" stroke=\"transparent\"/>\n<!-- 140161153511496 -->\n<g class=\"node\" id=\"node1\">\n<title>140161153511496</title>\n<polygon fill=\"none\" points=\"69,-1095.5 69,-1131.5 202,-1131.5 202,-1095.5 69,-1095.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-1109.8\">input_1: InputLayer</text>\n</g>\n<!-- 140161153512784 -->\n<g class=\"node\" id=\"node2\">\n<title>140161153512784</title>\n<polygon fill=\"none\" points=\"69,-1022.5 69,-1058.5 202,-1058.5 202,-1022.5 69,-1022.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-1036.8\">conv2d_1: Conv2D</text>\n</g>\n<!-- 140161153511496&#45;&gt;140161153512784 -->\n<g class=\"edge\" id=\"edge1\">\n<title>140161153511496-&gt;140161153512784</title>\n<path d=\"M135.5,-1095.4551C135.5,-1087.3828 135.5,-1077.6764 135.5,-1068.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-1068.5903 135.5,-1058.5904 132.0001,-1068.5904 139.0001,-1068.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161153512224 -->\n<g class=\"node\" id=\"node3\">\n<title>140161153512224</title>\n<polygon fill=\"none\" points=\"0,-949.5 0,-985.5 271,-985.5 271,-949.5 0,-949.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-963.8\">batch_normalization_1: BatchNormalization</text>\n</g>\n<!-- 140161153512784&#45;&gt;140161153512224 -->\n<g class=\"edge\" id=\"edge2\">\n<title>140161153512784-&gt;140161153512224</title>\n<path d=\"M135.5,-1022.4551C135.5,-1014.3828 135.5,-1004.6764 135.5,-995.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-995.5903 135.5,-985.5904 132.0001,-995.5904 139.0001,-995.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161153513456 -->\n<g class=\"node\" id=\"node4\">\n<title>140161153513456</title>\n<polygon fill=\"none\" points=\"25,-876.5 25,-912.5 246,-912.5 246,-876.5 25,-876.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-890.8\">max_pooling2d_1: MaxPooling2D</text>\n</g>\n<!-- 140161153512224&#45;&gt;140161153513456 -->\n<g class=\"edge\" id=\"edge3\">\n<title>140161153512224-&gt;140161153513456</title>\n<path d=\"M135.5,-949.4551C135.5,-941.3828 135.5,-931.6764 135.5,-922.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-922.5903 135.5,-912.5904 132.0001,-922.5904 139.0001,-922.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161162869840 -->\n<g class=\"node\" id=\"node5\">\n<title>140161162869840</title>\n<polygon fill=\"none\" points=\"69,-803.5 69,-839.5 202,-839.5 202,-803.5 69,-803.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-817.8\">conv2d_2: Conv2D</text>\n</g>\n<!-- 140161153513456&#45;&gt;140161162869840 -->\n<g class=\"edge\" id=\"edge4\">\n<title>140161153513456-&gt;140161162869840</title>\n<path d=\"M135.5,-876.4551C135.5,-868.3828 135.5,-858.6764 135.5,-849.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-849.5903 135.5,-839.5904 132.0001,-849.5904 139.0001,-849.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161093979720 -->\n<g class=\"node\" id=\"node6\">\n<title>140161093979720</title>\n<polygon fill=\"none\" points=\"0,-730.5 0,-766.5 271,-766.5 271,-730.5 0,-730.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-744.8\">batch_normalization_2: BatchNormalization</text>\n</g>\n<!-- 140161162869840&#45;&gt;140161093979720 -->\n<g class=\"edge\" id=\"edge5\">\n<title>140161162869840-&gt;140161093979720</title>\n<path d=\"M135.5,-803.4551C135.5,-795.3828 135.5,-785.6764 135.5,-776.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-776.5903 135.5,-766.5904 132.0001,-776.5904 139.0001,-776.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161094117808 -->\n<g class=\"node\" id=\"node7\">\n<title>140161094117808</title>\n<polygon fill=\"none\" points=\"25,-657.5 25,-693.5 246,-693.5 246,-657.5 25,-657.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-671.8\">max_pooling2d_2: MaxPooling2D</text>\n</g>\n<!-- 140161093979720&#45;&gt;140161094117808 -->\n<g class=\"edge\" id=\"edge6\">\n<title>140161093979720-&gt;140161094117808</title>\n<path d=\"M135.5,-730.4551C135.5,-722.3828 135.5,-712.6764 135.5,-703.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-703.5903 135.5,-693.5904 132.0001,-703.5904 139.0001,-703.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161093747936 -->\n<g class=\"node\" id=\"node8\">\n<title>140161093747936</title>\n<polygon fill=\"none\" points=\"69,-584.5 69,-620.5 202,-620.5 202,-584.5 69,-584.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-598.8\">conv2d_3: Conv2D</text>\n</g>\n<!-- 140161094117808&#45;&gt;140161093747936 -->\n<g class=\"edge\" id=\"edge7\">\n<title>140161094117808-&gt;140161093747936</title>\n<path d=\"M135.5,-657.4551C135.5,-649.3828 135.5,-639.6764 135.5,-630.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-630.5903 135.5,-620.5904 132.0001,-630.5904 139.0001,-630.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161093393656 -->\n<g class=\"node\" id=\"node9\">\n<title>140161093393656</title>\n<polygon fill=\"none\" points=\"69,-511.5 69,-547.5 202,-547.5 202,-511.5 69,-511.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-525.8\">conv2d_4: Conv2D</text>\n</g>\n<!-- 140161093747936&#45;&gt;140161093393656 -->\n<g class=\"edge\" id=\"edge8\">\n<title>140161093747936-&gt;140161093393656</title>\n<path d=\"M135.5,-584.4551C135.5,-576.3828 135.5,-566.6764 135.5,-557.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-557.5903 135.5,-547.5904 132.0001,-557.5904 139.0001,-557.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161092642912 -->\n<g class=\"node\" id=\"node10\">\n<title>140161092642912</title>\n<polygon fill=\"none\" points=\"69,-438.5 69,-474.5 202,-474.5 202,-438.5 69,-438.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-452.8\">conv2d_5: Conv2D</text>\n</g>\n<!-- 140161093393656&#45;&gt;140161092642912 -->\n<g class=\"edge\" id=\"edge9\">\n<title>140161093393656-&gt;140161092642912</title>\n<path d=\"M135.5,-511.4551C135.5,-503.3828 135.5,-493.6764 135.5,-484.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-484.5903 135.5,-474.5904 132.0001,-484.5904 139.0001,-484.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161092739424 -->\n<g class=\"node\" id=\"node11\">\n<title>140161092739424</title>\n<polygon fill=\"none\" points=\"0,-365.5 0,-401.5 271,-401.5 271,-365.5 0,-365.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-379.8\">batch_normalization_3: BatchNormalization</text>\n</g>\n<!-- 140161092642912&#45;&gt;140161092739424 -->\n<g class=\"edge\" id=\"edge10\">\n<title>140161092642912-&gt;140161092739424</title>\n<path d=\"M135.5,-438.4551C135.5,-430.3828 135.5,-420.6764 135.5,-411.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-411.5903 135.5,-401.5904 132.0001,-411.5904 139.0001,-411.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161092741888 -->\n<g class=\"node\" id=\"node12\">\n<title>140161092741888</title>\n<polygon fill=\"none\" points=\"25,-292.5 25,-328.5 246,-328.5 246,-292.5 25,-292.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-306.8\">max_pooling2d_3: MaxPooling2D</text>\n</g>\n<!-- 140161092739424&#45;&gt;140161092741888 -->\n<g class=\"edge\" id=\"edge11\">\n<title>140161092739424-&gt;140161092741888</title>\n<path d=\"M135.5,-365.4551C135.5,-357.3828 135.5,-347.6764 135.5,-338.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-338.5903 135.5,-328.5904 132.0001,-338.5904 139.0001,-338.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161092415784 -->\n<g class=\"node\" id=\"node13\">\n<title>140161092415784</title>\n<polygon fill=\"none\" points=\"79,-219.5 79,-255.5 192,-255.5 192,-219.5 79,-219.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-233.8\">flatten_1: Flatten</text>\n</g>\n<!-- 140161092741888&#45;&gt;140161092415784 -->\n<g class=\"edge\" id=\"edge12\">\n<title>140161092741888-&gt;140161092415784</title>\n<path d=\"M135.5,-292.4551C135.5,-284.3828 135.5,-274.6764 135.5,-265.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-265.5903 135.5,-255.5904 132.0001,-265.5904 139.0001,-265.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161092418976 -->\n<g class=\"node\" id=\"node14\">\n<title>140161092418976</title>\n<polygon fill=\"none\" points=\"82,-146.5 82,-182.5 189,-182.5 189,-146.5 82,-146.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-160.8\">dense_1: Dense</text>\n</g>\n<!-- 140161092415784&#45;&gt;140161092418976 -->\n<g class=\"edge\" id=\"edge13\">\n<title>140161092415784-&gt;140161092418976</title>\n<path d=\"M135.5,-219.4551C135.5,-211.3828 135.5,-201.6764 135.5,-192.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-192.5903 135.5,-182.5904 132.0001,-192.5904 139.0001,-192.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161091700720 -->\n<g class=\"node\" id=\"node15\">\n<title>140161091700720</title>\n<polygon fill=\"none\" points=\"82,-73.5 82,-109.5 189,-109.5 189,-73.5 82,-73.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-87.8\">dense_2: Dense</text>\n</g>\n<!-- 140161092418976&#45;&gt;140161091700720 -->\n<g class=\"edge\" id=\"edge14\">\n<title>140161092418976-&gt;140161091700720</title>\n<path d=\"M135.5,-146.4551C135.5,-138.3828 135.5,-128.6764 135.5,-119.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-119.5903 135.5,-109.5904 132.0001,-119.5904 139.0001,-119.5903\" stroke=\"#000000\"/>\n</g>\n<!-- 140161091310200 -->\n<g class=\"node\" id=\"node16\">\n<title>140161091310200</title>\n<polygon fill=\"none\" points=\"82,-.5 82,-36.5 189,-36.5 189,-.5 82,-.5\" stroke=\"#000000\"/>\n<text fill=\"#000000\" font-family=\"Times,serif\" font-size=\"14.00\" text-anchor=\"middle\" x=\"135.5\" y=\"-14.8\">dense_3: Dense</text>\n</g>\n<!-- 140161091700720&#45;&gt;140161091310200 -->\n<g class=\"edge\" id=\"edge15\">\n<title>140161091700720-&gt;140161091310200</title>\n<path d=\"M135.5,-73.4551C135.5,-65.3828 135.5,-55.6764 135.5,-46.6817\" fill=\"none\" stroke=\"#000000\"/>\n<polygon fill=\"#000000\" points=\"139.0001,-46.5903 135.5,-36.5904 132.0001,-46.5904 139.0001,-46.5903\" stroke=\"#000000\"/>\n</g>\n</g>\n</svg>"
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 6
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "bkfr4C2mAYfd",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "def vgg(input_shape, n_classes):\n",
+        "  input = Input(input_shape)\n",
+        "  x = Conv2D(64, 3, activation='relu', padding = 'same')(input)\n",
+        "  x = Conv2D(64, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = MaxPool2D(2, strides=2)(x)\n",
+        "  \n",
+        "  x = Conv2D(128, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = Conv2D(128, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = MaxPool2D(2, strides=2)(x)\n",
+        "  \n",
+        "  x = Conv2D(256, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = Conv2D(256, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = Conv2D(256, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = MaxPool2D(2, strides=2)(x)\n",
+        "  \n",
+        "  x = Conv2D(512, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = Conv2D(512, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = Conv2D(512, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = MaxPool2D(2, strides=2)(x)\n",
+        "  \n",
+        "  \n",
+        "  x = Conv2D(512, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = Conv2D(512, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = Conv2D(512, 3, activation='relu', padding = 'same')(x)\n",
+        "  x = MaxPool2D(2, strides=2)(x)\n",
+        "  \n",
+        "  x = Flatten()(x)\n",
+        "  x = Dense(4096, activation='relu')(x)\n",
+        "  x = Dense(4096, activation='relu')(x)\n",
+        "  output = Dense(n_classes, activation='relu')(x)\n",
+        "  return Model(input, output)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "CNTv7aW9B80G",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 937
+        },
+        "outputId": "a84025b8-7122-4c21-af83-505ff92ad1b4"
+      },
+      "cell_type": "code",
+      "source": [
+        "input_shape = 224, 224, 3\n",
+        "n_classes = 1000\n",
+        "\n",
+        "K.clear_session()\n",
+        "model = vgg(input_shape, n_classes)\n",
+        "model.summary()"
+      ],
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "_________________________________________________________________\n",
+            "Layer (type)                 Output Shape              Param #   \n",
+            "=================================================================\n",
+            "input_1 (InputLayer)         (None, 224, 224, 3)       0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_1 (Conv2D)            (None, 224, 224, 64)      1792      \n",
+            "_________________________________________________________________\n",
+            "conv2d_2 (Conv2D)            (None, 224, 224, 64)      36928     \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_1 (MaxPooling2 (None, 112, 112, 64)      0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_3 (Conv2D)            (None, 112, 112, 128)     73856     \n",
+            "_________________________________________________________________\n",
+            "conv2d_4 (Conv2D)            (None, 112, 112, 128)     147584    \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_2 (MaxPooling2 (None, 56, 56, 128)       0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_5 (Conv2D)            (None, 56, 56, 256)       295168    \n",
+            "_________________________________________________________________\n",
+            "conv2d_6 (Conv2D)            (None, 56, 56, 256)       590080    \n",
+            "_________________________________________________________________\n",
+            "conv2d_7 (Conv2D)            (None, 56, 56, 256)       590080    \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_3 (MaxPooling2 (None, 28, 28, 256)       0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_8 (Conv2D)            (None, 28, 28, 512)       1180160   \n",
+            "_________________________________________________________________\n",
+            "conv2d_9 (Conv2D)            (None, 28, 28, 512)       2359808   \n",
+            "_________________________________________________________________\n",
+            "conv2d_10 (Conv2D)           (None, 28, 28, 512)       2359808   \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_4 (MaxPooling2 (None, 14, 14, 512)       0         \n",
+            "_________________________________________________________________\n",
+            "conv2d_11 (Conv2D)           (None, 14, 14, 512)       2359808   \n",
+            "_________________________________________________________________\n",
+            "conv2d_12 (Conv2D)           (None, 14, 14, 512)       2359808   \n",
+            "_________________________________________________________________\n",
+            "conv2d_13 (Conv2D)           (None, 14, 14, 512)       2359808   \n",
+            "_________________________________________________________________\n",
+            "max_pooling2d_5 (MaxPooling2 (None, 7, 7, 512)         0         \n",
+            "_________________________________________________________________\n",
+            "flatten_1 (Flatten)          (None, 25088)             0         \n",
+            "_________________________________________________________________\n",
+            "dense_1 (Dense)              (None, 4096)              102764544 \n",
+            "_________________________________________________________________\n",
+            "dense_2 (Dense)              (None, 4096)              16781312  \n",
+            "_________________________________________________________________\n",
+            "dense_3 (Dense)              (None, 1000)              4097000   \n",
+            "=================================================================\n",
+            "Total params: 138,357,544\n",
+            "Trainable params: 138,357,544\n",
+            "Non-trainable params: 0\n",
+            "_________________________________________________________________\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "MHbIAmt6CDmo",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "execution_count": 0,
+      "outputs": []
+    }
+  ]
+}
